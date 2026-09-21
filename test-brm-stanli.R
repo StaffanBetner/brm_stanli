@@ -77,13 +77,14 @@ brm_stanli_make_slow_fit <- function(seed) {
   brm_stanli_test_requirements()
 
   brm_stanli(
-    Reaction ~ Days + (1 + Days | Subject),
+    Reaction ~ 1 + s(Days) + (1 + Days | Subject),
     data = lme4::sleepstudy,
-    family = brms::student(),
+    family = stats::gaussian(),
     chains = 4L,
     iter = 1000L,
     warmup = 500L,
     cores = 4L,
+    control = list(adapt_delta = 0.99),
     seed = seed,
     refresh = 0L
   )
