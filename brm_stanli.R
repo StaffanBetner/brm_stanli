@@ -1030,6 +1030,12 @@ reloo_stanli <- function(
       "No problematic observations found. Returning the original loo object."
     )
 
+    attr(loo, "reloo_stanli") <- list(
+      omitted_rows = omitted_rows,
+      k_threshold = k_threshold,
+      refit_args = refit_args
+    )
+
     return(loo)
   }
 
