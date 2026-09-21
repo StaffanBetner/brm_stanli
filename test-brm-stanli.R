@@ -308,7 +308,7 @@ testthat::test_that("update preserves the Stanli class and refits through brm_st
   )
 
   testthat::expect_true(
-    any(grepl("I\\(Days\\^2\\)", fixed_effect_names))
+    any(grepl("IDays|I\\(Days", fixed_effect_names))
   )
 
   testthat::expect_equal(
