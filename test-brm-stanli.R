@@ -63,7 +63,7 @@ brm_stanli_make_fast_fit <- function(seed) {
   brm_stanli(
     Reaction ~ Days + (1 | Subject),
     data = lme4::sleepstudy,
-    family = brms::gaussian(),
+    family = stats::gaussian(),
     chains = 2L,
     iter = 200L,
     warmup = 100L,
@@ -374,7 +374,7 @@ testthat::test_that("cached fits restore a live Stanli model", {
   fitted_model <- brm_stanli(
     Reaction ~ Days + (1 | Subject),
     data = lme4::sleepstudy,
-    family = brms::gaussian(),
+    family = stats::gaussian(),
     chains = 2L,
     iter = 200L,
     warmup = 100L,
@@ -388,7 +388,7 @@ testthat::test_that("cached fits restore a live Stanli model", {
   restored_model <- brm_stanli(
     Reaction ~ Days + (1 | Subject),
     data = lme4::sleepstudy,
-    family = brms::gaussian(),
+    family = stats::gaussian(),
     chains = 2L,
     iter = 200L,
     warmup = 100L,
