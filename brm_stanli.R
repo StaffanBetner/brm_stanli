@@ -253,10 +253,17 @@ brm_stanli_restore_model <- function(x) {
     threads_per_chain = stanli_metadata$threads_per_chain
   )
 
+  saved_fnames_oi <- x$fit@sim$fnames_oi
+  if (!is.null(x$fit@sim$fnames_oi_old)) {
+    x$fit@sim$fnames_oi <- x$fit@sim$fnames_oi_old
+  }
+
   x$fit <- stanli::as_stanfit(
     x$fit,
     model = restored_model
   )
+
+  x$fit@sim$fnames_oi <- saved_fnames_oi
 
   brm_stanli_mark_fit(x)
 }
