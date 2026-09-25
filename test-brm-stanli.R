@@ -90,6 +90,31 @@ brm_stanli_make_slow_fit <- function(seed) {
   )
 }
 
+testthat::test_that("only intermediate Pareto warnings are muffled", {
+  testthat::expect_silent(
+    brm_stanli_muffle_intermediate_pareto_warnings({
+      warning("Found a pareto_k > 0.7", call. = FALSE)
+      warning("Pareto k diagnostic values are too high", call. = FALSE)
+    }, muffle = TRUE)
+  )
+
+  testthat::expect_warning(
+    brm_stanli_muffle_intermediate_pareto_warnings(
+      warning("Unrelated warning", call. = FALSE),
+      muffle = TRUE
+    ),
+    "Unrelated warning"
+  )
+
+  testthat::expect_warning(
+    brm_stanli_muffle_intermediate_pareto_warnings(
+      warning("Found a pareto_k > 0.7", call. = FALSE),
+      muffle = FALSE
+    ),
+    "pareto_k >"
+  )
+})
+
 testthat::test_that("brm_stanli creates a live Stanli-backed brmsfit", {
   fit <- brm_stanli_make_fast_fit(seed = 1001L)
 
@@ -528,22 +553,29 @@ testthat::test_that("moment matching and reloo run sequentially", {
 
   fit <- brm_stanli_make_slow_fit(seed = 1014L)
 
-  corrected_loo <- brms::loo(
-    fit,
-    moment_match = TRUE,
-    reloo = TRUE,
-    moment_match_args = list(
-      max_iters = 100L
-    ),
-    reloo_args = list(
-      refit_args = list(
-        chains = 2L,
-        iter = 500L,
-        warmup = 250L,
-        cores = 2L,
-        seed = 1015L
+  warnings <- character()
+  corrected_loo <- withCallingHandlers(
+    brms::loo(
+      fit,
+      moment_match = TRUE,
+      reloo = TRUE,
+      moment_match_args = list(
+        max_iters = 100L
+      ),
+      reloo_args = list(
+        refit_args = list(
+          chains = 2L,
+          iter = 500L,
+          warmup = 250L,
+          cores = 2L,
+          seed = 1015L
+        )
       )
-    )
+    ),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
   )
 
   remaining_problematic_rows <- loo::pareto_k_ids(
@@ -560,6 +592,12 @@ testthat::test_that("moment matching and reloo run sequentially", {
     remaining_problematic_rows,
     0L
   )
+
+  testthat::expect_false(any(grepl(
+    "pareto_k >|Pareto k diagnostic values are too high",
+    warnings,
+    ignore.case = TRUE
+  )))
 
   testthat::expect_true(
     !is.null(attr(corrected_loo, "reloo_stanli"))

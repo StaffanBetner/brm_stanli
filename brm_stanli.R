@@ -1195,6 +1195,25 @@ reloo_stanli <- function(
   loo
 }
 
+brm_stanli_muffle_intermediate_pareto_warnings <- function(expr, muffle) {
+  if (!muffle) {
+    return(expr)
+  }
+
+  withCallingHandlers(
+    expr,
+    warning = function(warning) {
+      if (grepl(
+        "pareto_k >|Pareto k diagnostic values are too high",
+        conditionMessage(warning),
+        ignore.case = TRUE
+      )) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
+}
+
 loo.brm_stanli_fit <- function(
   x,
   ...,
@@ -1272,22 +1291,10 @@ loo.brm_stanli_fit <- function(
     )
   }
 
-  if (isTRUE(moment_match) || isTRUE(reloo)) {
-    loo_result <- withCallingHandlers(
-      compute_ordinary_loo(),
-      warning = function(warning) {
-        if (grepl(
-          "pareto_k >|Pareto k diagnostic values are too high",
-          conditionMessage(warning),
-          ignore.case = TRUE
-        )) {
-          invokeRestart("muffleWarning")
-        }
-      }
-    )
-  } else {
-    loo_result <- compute_ordinary_loo()
-  }
+  loo_result <- brm_stanli_muffle_intermediate_pareto_warnings(
+    compute_ordinary_loo(),
+    muffle = isTRUE(moment_match) || isTRUE(reloo)
+  )
 
   attr(loo_result, "model_name") <- model_names
 
@@ -1307,9 +1314,9 @@ loo.brm_stanli_fit <- function(
 
     moment_match_call$cores <- 1L
 
-    loo_result <- do.call(
-      loo_moment_match_stanli,
-      moment_match_call
+    loo_result <- brm_stanli_muffle_intermediate_pareto_warnings(
+      do.call(loo_moment_match_stanli, moment_match_call),
+      muffle = isTRUE(reloo)
     )
 
     attr(loo_result, "model_name") <- model_names
