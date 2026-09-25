@@ -1259,14 +1259,11 @@ loo.brm_stanli_fit <- function(
       reloo = FALSE,
       k_threshold = k_threshold,
       save_psis = save_psis,
-      use_stored = can_use_stored_loo
+      use_stored = can_use_stored_loo,
+      model_names = model_names
     ),
     dots
   )
-
-  if (!can_use_stored_loo) {
-    ordinary_loo_call$model_names <- model_names
-  }
 
   compute_ordinary_loo <- function() {
     do.call(

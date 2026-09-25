@@ -156,14 +156,27 @@ testthat::test_that("ordinary posterior post-processing works", {
 testthat::test_that("ordinary PSIS-LOO uses the Stanli-aware method", {
   fit <- brm_stanli_make_fast_fit(seed = 1003L)
 
-  loo_result <- suppressWarnings(
+  warnings <- character()
+  loo_result <- withCallingHandlers(
     brms::loo(
       fit,
       cores = 1L
-    )
+    ),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
   )
 
   testthat::expect_s3_class(loo_result, "loo")
+
+  testthat::expect_true(
+    any(grepl("model 'fit'", warnings, fixed = TRUE))
+  )
+
+  testthat::expect_false(
+    any(grepl("structure(list(", warnings, fixed = TRUE))
+  )
 
   testthat::expect_identical(
     attr(loo_result, "model_name"),
